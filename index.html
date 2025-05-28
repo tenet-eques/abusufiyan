@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +52,10 @@
         }
 
         body {
-            background-color: #ffffff;
+            background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: #000000;
             line-height: 1.6;
             transition: all 0.3s ease;
@@ -22,7 +64,7 @@
         }
 
         .dark-mode {
-            background-color: #1a1a1a;
+            background: #1a1a1a;
             color: #e0e0e0;
         }
 
@@ -73,10 +115,10 @@
         }
 
         .hero {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1516321310762-3730b76a4a6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
             color: #fff;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 10px;
             animation: fadeIn 2s ease-in-out;
         }
 
@@ -130,10 +172,10 @@
         }
 
         .summary {
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1516321310762-3730b76a4a6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
+            background: rgba(0, 0, 0, 0.6);
             color: #fff;
+            padding: 2rem;
+            border-radius: 10px;
         }
 
         .dark-mode .summary {
@@ -141,9 +183,9 @@
         }
 
         .summary p {
-            max-width: 700px;
+            max-width: 800px;
             font-size: 1.2rem;
-            padding: 1rem;
+            padding: 8px;
         }
 
         .skills, .contact {
@@ -161,7 +203,7 @@
             gap: 1rem;
             max-width: 900px;
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 8px;
         }
 
         .skill-item {
@@ -200,12 +242,12 @@
             border-radius: 5px;
             font-size: 1rem;
             background-color: #fff;
-            color: #000;
+            color: #333;
         }
 
         .dark-mode .contact input, .dark-mode .contact textarea {
-            background-color: #3a3a3a;
-            border-color: #555;
+            background-color: #333333;
+            border-color: #3a555;
             color: #e0e0e0;
         }
 
@@ -217,7 +259,7 @@
         .contact button {
             padding: 0.75rem;
             background-color: #007bff;
-            color: #fff;
+            color: #ffffff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -241,8 +283,8 @@
             position: fixed;
             bottom: 1rem;
             right: 1rem;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             background-color: #000000;
             color: #ffffff;
             border: none;
@@ -251,7 +293,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1rem;
             z-index: 1100;
             transition: background-color 0.3s ease;
         }
@@ -327,9 +369,6 @@
         <h1>Abu Sufiyan</h1>
         <p>DevOps & Java Full Stack Developer</p>
         <p class="tagline">I like minimal designs so, this is minimal without any distractions</p>
-        <div class="contact-info">
-            
-        </div>
     </section>
 
     <section id="summary" class="section summary">
