@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -52,13 +13,21 @@
         }
 
         body {
+            background-color: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .dark-mode {
             background-color: #1a1a1a;
             color: #e0e0e0;
-            line-height: 1.6;
-            position: relative;
         }
 
         .background-video {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -69,7 +38,12 @@
             opacity: 0.6;
         }
 
+        .dark-mode .background-video {
+            display: block;
+        }
+
         .dark-mode-overlay {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -77,6 +51,14 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.3);
             z-index: -1;
+        }
+
+        .dark-mode .dark-mode-overlay {
+            display: block;
+        }
+
+        .dark-mode .section {
+            background: none !important;
         }
 
         .section {
@@ -88,12 +70,18 @@
             padding: 2rem;
             text-align: center;
             position: relative;
-            background: none;
         }
 
         .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1516321310762-3730b76a4a6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
             color: #fff;
             animation: fadeIn 2s ease-in-out;
+        }
+
+        .dark-mode .hero {
+            background: none;
         }
 
         @keyframes fadeIn {
@@ -115,17 +103,56 @@
             font-size: 1rem;
             font-style: italic;
             opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .contact-info a {
+            color: #66b0ff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-info a:hover {
+            color: #3385ff;
+        }
+
+        .contact-info span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .summary {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1516321310762-3730b76a4a6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+
+        .dark-mode .summary {
+            background: none;
         }
 
         .summary p {
             max-width: 700px;
             font-size: 1.2rem;
             padding: 1rem;
-            color: #fff;
         }
 
         .skills, .contact {
+            background-color: #ffffff;
             padding: 2rem;
+        }
+
+        .dark-mode .skills, .dark-mode .contact {
+            background-color: transparent;
         }
 
         .skills-grid {
@@ -138,11 +165,25 @@
         }
 
         .skill-item {
-            background-color: #3a3a3a;
+            background-color: #f0f0f0;
             padding: 0.5rem;
             border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .dark-mode .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .dark-mode .skill-item:hover {
+            transform: translateY(-5px);
         }
 
         .contact form {
@@ -155,10 +196,16 @@
 
         .contact input, .contact textarea {
             padding: 0.75rem;
-            border: 1px solid #555;
+            border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 1rem;
+            background-color: #fff;
+            color: #000;
+        }
+
+        .dark-mode .contact input, .dark-mode .contact textarea {
             background-color: #3a3a3a;
+            border-color: #555;
             color: #e0e0e0;
         }
 
@@ -169,7 +216,7 @@
 
         .contact button {
             padding: 0.75rem;
-            background-color: #66b0ff;
+            background-color: #007bff;
             color: #fff;
             border: none;
             border-radius: 5px;
@@ -178,8 +225,48 @@
             transition: background-color 0.3s ease;
         }
 
+        .dark-mode .contact button {
+            background-color: #66b0ff;
+        }
+
         .contact button:hover {
+            background-color: #0056b3;
+        }
+
+        .dark-mode .contact button:hover {
             background-color: #3385ff;
+        }
+
+        .toggle-button {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 1100;
+            transition: background-color 0.3s ease;
+        }
+
+        .dark-mode .toggle-button {
+            background-color: #e0e0e0;
+            color: #000000;
+        }
+
+        .toggle-button::before {
+            content: '☀';
+        }
+
+        .dark-mode .toggle-button::before {
+            content: '🌙';
         }
 
         @media (max-width: 768px) {
@@ -218,6 +305,10 @@
                 font-size: 0.8rem;
             }
 
+            .contact-info {
+                font-size: 0.9rem;
+            }
+
             .skills-grid {
                 grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             }
@@ -230,10 +321,15 @@
         <source src="https://static.videezy.com/system/resources/previews/000/043/778/original/starfull_sky.mp4" type="video/mp4">
     </video>
 
+    <button class="toggle-button" onclick="toggleDarkMode()"></button>
+
     <section id="hero" class="section hero">
         <h1>Abu Sufiyan</h1>
         <p>DevOps & Java Full Stack Developer</p>
         <p class="tagline">I like minimal designs so, this is minimal without any distractions</p>
+        <div class="contact-info">
+            
+        </div>
     </section>
 
     <section id="summary" class="section summary">
@@ -302,7 +398,18 @@
     </section>
 
     <script>
-        // Ensure video playback
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            const video = document.querySelector('.background-video');
+            if (document.body.classList.contains('dark-mode')) {
+                tryPlayVideo(video);
+            } else {
+                video.pause();
+                video.currentTime = 0;
+            }
+        }
+
         function tryPlayVideo(video) {
             video.play().then(() => {
                 console.log('Galaxy video is playing successfully.');
@@ -320,15 +427,19 @@
             });
         }
 
-        // Initialize video
-        const video = document.querySelector('.background-video');
-        tryPlayVideo(video);
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            const video = document.querySelector('.background-video');
+            tryPlayVideo(video);
+        }
 
         // Ensure seamless looping
+        const video = document.querySelector('.background-video');
         video.addEventListener('ended', () => {
             video.currentTime = 0;
             video.play();
-            console.log('Video looped manually.');
+            console.log('Video looped successfully.');
         });
 
         // Log video events
@@ -346,7 +457,7 @@
             console.warn('Video stalled. Check network connection.');
         });
 
-        // Form submission feedback
+        // Form submission
         document.getElementById('contact-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = e.target;
